@@ -2,12 +2,14 @@ module Main exposing (main)
 
 import Browser
 import Coordinate exposing (Coordinate)
-import Extra exposing (delay, isJust)
 import Game exposing (Game)
 import GameBoard exposing (GameBoard, GameBoardSpace, Mark(..))
 import Html exposing (Html, button, div, h1, table, td, text, tr)
 import Html.Events exposing (onClick)
+import Maybe.Extra exposing (isJust)
 import Player exposing (..)
+import Player.Mark
+import Process
 import Random
 import Task
 
@@ -34,7 +36,9 @@ type InGameMsg
 
 type Msg
     = StartSinglePlayerGame
+    | StartTwoPlayerGame
     | GameMsg InGameMsg
+    | Escape
 
 
 randomCoordinate =
@@ -83,10 +87,22 @@ captureUpdate model coordinate =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Escape ->
+            ( initialModel, Cmd.none )
+
         StartSinglePlayerGame ->
             let
                 updatedModel =
                     Game.singlePlayer
+                        |> InGame
+                        |> Model
+            in
+            ( updatedModel, Cmd.none )
+
+        StartTwoPlayerGame ->
+            let
+                updatedModel =
+                    Game.twoPlayer
                         |> InGame
                         |> Model
             in
@@ -111,6 +127,12 @@ update msg model =
                                 ( model, doCaptureRandom )
 
                 ThinkingPause coordinate ->
+                    let
+                        delay seconds message =
+                            Process.sleep (seconds * 1000)
+                                |> Task.andThen (always <| Task.succeed message)
+                                |> Task.perform identity
+                    in
                     ( model, coordinate |> Capture |> GameMsg |> delay 0.8 )
 
 
@@ -143,7 +165,7 @@ gameRowsView currentPlayer =
 winnerMessage player =
     let
         basicMessage =
-            "The " ++ toMarkString player.mark ++ "'s Win!"
+            "The " ++ Player.Mark.toString player.mark ++ "'s Win!"
     in
     if player.typ == RandomPlayer then
         basicMessage ++ " ... Wait... Are you serious?? The random computer won?!"
@@ -163,30 +185,39 @@ finishedView game =
             else
                 "It's a draw!"
     in
-    div [] [ text message ]
+    div [] [ text message, div [] [ button [ onClick Escape ] [ text "Play Again" ] ] ]
 
 
 stateView : Model -> Html Msg
 stateView model =
     case model.state of
         Menu ->
-            div [] [ button [ onClick StartSinglePlayerGame ] [ text "Play Single Player" ] ]
+            div []
+                [ button [ onClick StartSinglePlayerGame ] [ text "Single Player" ]
+                , button [ onClick StartTwoPlayerGame ] [ text "Two Player" ]
+                ]
 
         InGame game ->
             let
+                currentPlayer =
+                    Game.currentPlayer game
+
+                mTurnHtml =
+                    [ div [] [ text <| Player.Mark.toString currentPlayer.mark ++ "'s Turn" ] ]
+                        |> Just
+                        |> Maybe.Extra.filter ((not <| Game.isFinished game) |> always)
+
                 tableHtml =
                     game.board
                         |> gameRowsView (Game.currentPlayer game)
                         |> table []
 
                 mFinishedHtml =
-                    if Game.isFinished game then
-                        Just <| [ finishedView game ]
-
-                    else
-                        Nothing
+                    [ finishedView game ]
+                        |> Just
+                        |> Maybe.Extra.filter (Game.isFinished game |> always)
             in
-            div [] (List.append [ tableHtml ] (Maybe.withDefault [] mFinishedHtml))
+            div [] (List.concat [ [ tableHtml ], Maybe.withDefault [] mTurnHtml, Maybe.withDefault [] mFinishedHtml ])
 
 
 view : Model -> Html Msg

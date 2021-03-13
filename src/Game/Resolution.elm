@@ -3,7 +3,8 @@ module Game.Resolution exposing (wonBy)
 import Binary exposing (Bits)
 import Coordinate exposing (Coordinate)
 import GameBoard exposing (GameBoard, Mark)
-import Player exposing (Player, PlayerMark)
+import Player exposing (Player)
+import Player.Mark
 
 
 type alias WinAlgorithmStep =
@@ -54,10 +55,10 @@ handleStep mark gameBoard { coordinate, win, turnOff } ( isWon, winPathPossibili
 wonBy : Player -> GameBoard -> Bool
 wonBy player gameBoard =
     let
-        gameBoardSpaceMark =
-            Player.toGameMark player.mark
+        gameBoardMark =
+            Player.Mark.toGameBoardMark player.mark
 
         initialValue =
             ( False, b [ 1, 1, 1, 1, 1, 1, 1, 1 ] )
     in
-    List.foldl (handleStep gameBoardSpaceMark gameBoard) initialValue steps |> Tuple.first
+    List.foldl (handleStep gameBoardMark gameBoard) initialValue steps |> Tuple.first

@@ -1,34 +1,11 @@
 module Player exposing (..)
 
-import GameBoard exposing (Mark(..))
+import Player.Mark exposing (PlayerMark)
 
 
 type PlayerType
     = HumanPlayer
     | RandomPlayer
-
-
-type PlayerMark
-    = XMark
-    | OMark
-
-
-toGameMark pMark =
-    case pMark of
-        XMark ->
-            X
-
-        OMark ->
-            O
-
-
-toMarkString pMark =
-    case pMark of
-        XMark ->
-            "X"
-
-        OMark ->
-            "O"
 
 
 type alias Player =

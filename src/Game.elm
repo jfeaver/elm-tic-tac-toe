@@ -1,10 +1,11 @@
 module Game exposing (..)
 
 import Coordinate exposing (Coordinate)
-import Extra exposing (isJust)
 import Game.Resolution
 import GameBoard exposing (GameBoard, GameBoardSpace)
-import Player exposing (Player, PlayerMark(..))
+import Maybe.Extra exposing (isJust)
+import Player exposing (Player)
+import Player.Mark exposing (PlayerMark(..))
 import Tuple2
 
 
@@ -28,6 +29,11 @@ singlePlayer =
     Game ( Player.human XMark, Player.bot OMark ) GameBoard.empty False Nothing
 
 
+twoPlayer : Game
+twoPlayer =
+    Game ( Player.human XMark, Player.human OMark ) GameBoard.empty False Nothing
+
+
 isFinished : Game -> Bool
 isFinished game =
     game.isDraw || isJust game.winner
@@ -40,7 +46,7 @@ capture game coordinate =
             game |> currentPlayer
 
         mark =
-            player |> .mark |> Player.toGameMark
+            player |> .mark |> Player.Mark.toGameBoardMark
 
         updatedBoard =
             GameBoard.set coordinate (GameBoardSpace mark coordinate) game.board
