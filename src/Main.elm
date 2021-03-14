@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Coordinate exposing (Coordinate)
 import Css exposing (border2, borderCollapse, center, collapse, cursor, height, margin, pointer, px, solid, textAlign, width)
-import Game exposing (Game)
+import Game exposing (Game, currentPlayer)
 import GameBoard exposing (GameBoard, GameBoardSpace, Mark(..))
 import Html.Styled exposing (Html, button, div, h1, table, td, text, toUnstyled, tr)
 import Html.Styled.Attributes exposing (css)
@@ -41,6 +41,7 @@ type Msg
     | StartTwoPlayerGame
     | GameMsg InGameMsg
     | Escape
+    | Again ( Player, Player )
 
 
 doCaptureRandom game =
@@ -86,6 +87,22 @@ update msg model =
     case msg of
         Escape ->
             ( initialModel, Cmd.none )
+
+        Again players ->
+            let
+                -- Using the existing players means that the loser gets to go first in the next game or swaps in case of a draw
+                newGame =
+                    Game.new players
+
+                cmd =
+                    case currentPlayer newGame |> .typ of
+                        HumanPlayer ->
+                            Cmd.none
+
+                        RandomPlayer ->
+                            doCaptureRandom newGame
+            in
+            ( Model (InGame newGame), cmd )
 
         StartSinglePlayerGame ->
             let
@@ -185,7 +202,7 @@ finishedView game =
             else
                 "It's a draw!"
     in
-    div [] [ text message, div [] [ button [ onClick Escape ] [ text "Play Again" ] ] ]
+    div [] [ text message, div [] [ button [ onClick <| Again game.players ] [ text "Play Again" ], button [ onClick Escape ] [ text "Menu" ] ] ]
 
 
 stateView : Model -> Html Msg

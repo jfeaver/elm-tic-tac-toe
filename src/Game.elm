@@ -25,14 +25,19 @@ currentPlayer game =
     game.players |> Tuple.first
 
 
+new : ( Player, Player ) -> Game
+new players =
+    Game players GameBoard.empty False Nothing
+
+
 singlePlayer : Game
 singlePlayer =
-    Game ( Player.human XMark, Player.bot OMark ) GameBoard.empty False Nothing
+    new ( Player.human XMark, Player.bot OMark )
 
 
 twoPlayer : Game
 twoPlayer =
-    Game ( Player.human XMark, Player.human OMark ) GameBoard.empty False Nothing
+    new ( Player.human XMark, Player.human OMark )
 
 
 isFinished : Game -> Bool
@@ -46,14 +51,19 @@ randomChoiceGenerator game =
     Random.pair (Random.int 0 2) (Random.int 0 2)
 
 
+nextTurn : Game -> Game
+nextTurn game =
+    { game | players = Tuple2.swap game.players }
+
+
 capture : Game -> Coordinate -> Game
 capture game coordinate =
     let
         player =
-            game |> currentPlayer
+            currentPlayer game
 
         mark =
-            player |> .mark |> Player.Mark.toGameBoardMark
+            player.mark |> Player.Mark.toGameBoardMark
 
         updatedBoard =
             GameBoard.set coordinate (GameBoardSpace mark coordinate) game.board
@@ -67,7 +77,7 @@ capture game coordinate =
     in
     { game
         | board = updatedBoard
-        , players = Tuple2.swap game.players
         , isDraw = GameBoard.isDraw updatedBoard
         , winner = winner
     }
+        |> nextTurn
