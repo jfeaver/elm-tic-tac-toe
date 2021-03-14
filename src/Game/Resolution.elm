@@ -3,6 +3,7 @@ module Game.Resolution exposing (wonBy)
 import Binary exposing (Bits)
 import Coordinate exposing (Coordinate)
 import GameBoard exposing (GameBoard, Mark)
+import Maybe.Extra
 import Player exposing (Player)
 import Player.Mark
 
@@ -45,7 +46,7 @@ handleStep mark gameBoard { coordinate, win, turnOff } ( isWon, winPathPossibili
     else if Binary.toDecimal winPathPossibilities == 0 then
         ( False, winPathPossibilities )
 
-    else if Maybe.withDefault False <| GameBoard.hasMark mark coordinate gameBoard then
+    else if Maybe.Extra.isJust (GameBoard.hasMark mark coordinate gameBoard) then
         ( Binary.toDecimal (Binary.and winPathPossibilities win) > 0, winPathPossibilities )
 
     else

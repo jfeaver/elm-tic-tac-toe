@@ -43,13 +43,8 @@ type Msg
     | Escape
 
 
-randomCoordinate =
-    -- FIXME This could be smarter if I picked from known empty spaces
-    Random.pair (Random.int 0 2) (Random.int 0 2)
-
-
-doCaptureRandom =
-    Random.generate CaptureRandom randomCoordinate |> Cmd.map GameMsg
+doCaptureRandom game =
+    Random.generate CaptureRandom (Game.randomChoiceGenerator game) |> Cmd.map GameMsg
 
 
 doCapture coordinate =
@@ -81,7 +76,7 @@ captureUpdate model coordinate =
                                 Cmd.none
 
                             RandomPlayer ->
-                                doCaptureRandom
+                                doCaptureRandom updatedGame
             in
             ( { model | state = InGame updatedGame }, cmd )
 
@@ -122,11 +117,10 @@ update msg model =
                             ( model, Cmd.none )
 
                         InGame game ->
-                            if Maybe.withDefault False (GameBoard.isEmpty coordinate game.board) then
-                                ( model, doCapture coordinate )
-
-                            else
-                                ( model, doCaptureRandom )
+                            game.board
+                                |> GameBoard.isEmpty coordinate
+                                |> Maybe.map (always ( model, doCapture coordinate ))
+                                |> Maybe.withDefault ( model, doCaptureRandom game )
 
                 ThinkingPause coordinate ->
                     let
