@@ -6,7 +6,6 @@ import GameBoard exposing (GameBoard, GameBoardSpace)
 import Maybe.Extra exposing (isJust)
 import Player exposing (Player)
 import Player.Mark exposing (PlayerMark(..))
-import Random exposing (Generator)
 import Tuple2
 
 
@@ -45,12 +44,6 @@ isFinished game =
     game.isDraw || isJust game.winner
 
 
-randomChoiceGenerator : Game -> Generator Coordinate
-randomChoiceGenerator game =
-    -- FIXME This could be smarter if I picked from known empty spaces
-    Random.pair (Random.int 0 2) (Random.int 0 2)
-
-
 nextTurn : Game -> Game
 nextTurn game =
     { game | players = Tuple2.swap game.players }
@@ -66,7 +59,7 @@ capture game coordinate =
             player.mark |> Player.Mark.toGameBoardMark
 
         updatedBoard =
-            GameBoard.set coordinate (GameBoardSpace mark coordinate) game.board
+            GameBoard.capture coordinate (GameBoardSpace mark coordinate) game.board
 
         winner =
             if Game.Resolution.wonBy player updatedBoard then
@@ -80,4 +73,3 @@ capture game coordinate =
         , isDraw = GameBoard.isDraw updatedBoard
         , winner = winner
     }
-        |> nextTurn

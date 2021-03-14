@@ -32,7 +32,7 @@ initialModel =
 
 type InGameMsg
     = Capture Coordinate
-    | CaptureRandom Coordinate
+    | CaptureRandom Int
     | ThinkingPause Coordinate
 
 
@@ -45,7 +45,11 @@ type Msg
 
 
 doCaptureRandom game =
-    Random.generate CaptureRandom (Game.randomChoiceGenerator game) |> Cmd.map GameMsg
+    let
+        emptyNum =
+            GameBoard.randomEmptySpaceGenerator game.board
+    in
+    Random.generate CaptureRandom emptyNum |> Cmd.map GameMsg
 
 
 doCapture coordinate =
@@ -66,6 +70,7 @@ captureUpdate model coordinate =
             let
                 updatedGame =
                     Game.capture game coordinate
+                        |> Game.nextTurn
 
                 cmd =
                     if Game.isFinished updatedGame then
@@ -127,17 +132,14 @@ update msg model =
                 Capture coordinate ->
                     captureUpdate model coordinate
 
-                CaptureRandom coordinate ->
+                CaptureRandom emptySpaceNum ->
                     case model.state of
                         Menu ->
                             -- doesn't happen
                             ( model, Cmd.none )
 
                         InGame game ->
-                            game.board
-                                |> GameBoard.isEmpty coordinate
-                                |> Maybe.map (always ( model, doCapture coordinate ))
-                                |> Maybe.withDefault ( model, doCaptureRandom game )
+                            ( model, doCapture <| .coordinate <| GameBoard.nthEmptySpace emptySpaceNum game.board )
 
                 ThinkingPause coordinate ->
                     let

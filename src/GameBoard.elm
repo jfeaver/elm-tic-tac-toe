@@ -1,9 +1,24 @@
-module GameBoard exposing (GameBoard, GameBoardSpace, Mark(..), empty, hasMark, isDraw, isEmpty, isMark, map, set)
+module GameBoard exposing
+    ( GameBoard
+    , GameBoardSpace
+    , Mark(..)
+    , capture
+    , empty
+    , foldl
+    , hasMark
+    , isDraw
+    , isEmpty
+    , isMark
+    , map
+    , nthEmptySpace
+    , randomEmptySpaceGenerator
+    )
 
 import Array
 import Coordinate exposing (Coordinate)
 import Grid exposing (Grid)
 import Maybe.Extra
+import Random exposing (Generator)
 
 
 type Mark
@@ -19,7 +34,14 @@ type alias GameBoardSpace =
 
 
 type alias GameBoard =
-    Grid GameBoardSpace
+    { grid : Grid GameBoardSpace
+    , captured : Int
+    }
+
+
+randomEmptySpaceGenerator : GameBoard -> Generator Int
+randomEmptySpaceGenerator gameBoard =
+    Random.int 1 (9 - gameBoard.captured)
 
 
 isEmptySpace : GameBoardSpace -> Bool
@@ -34,7 +56,7 @@ isMark mark gameBoardSpace =
 
 empty : GameBoard
 empty =
-    Grid.initialize 3 3 (\x y -> GameBoardSpace Empty ( x, y ))
+    GameBoard (Grid.initialize 3 3 (\x y -> GameBoardSpace Empty ( x, y ))) 0
 
 
 map : (List a -> a) -> (GameBoardSpace -> a) -> GameBoard -> List a
@@ -45,30 +67,77 @@ map rowMapper spaceMapper gameBoard =
                 >> Array.map Array.toList
                 >> Array.toList
     in
-    gameBoard
+    gameBoard.grid
         |> gameBoardLists
         |> List.map (\row -> rowMapper (List.map spaceMapper row))
 
 
+type alias EmptySpaceFinderStep =
+    { space : GameBoardSpace
+    , count : Int
+    , emptySpaceNumber : Int
+    }
+
+
+emptySpaceFinder : GameBoardSpace -> EmptySpaceFinderStep -> EmptySpaceFinderStep
+emptySpaceFinder checkingSpace { space, count, emptySpaceNumber } =
+    if count == emptySpaceNumber || not (isEmptySpace checkingSpace) then
+        EmptySpaceFinderStep space count emptySpaceNumber
+
+    else
+        EmptySpaceFinderStep checkingSpace (count + 1) emptySpaceNumber
+
+
+nthEmptySpace : Int -> GameBoard -> GameBoardSpace
+nthEmptySpace n gameBoard =
+    let
+        initialFoldValue =
+            EmptySpaceFinderStep (GameBoardSpace Empty ( -1, -1 )) 0 n
+    in
+    foldl emptySpaceFinder initialFoldValue gameBoard
+        |> .space
+
+
+foldl : (GameBoardSpace -> a -> a) -> a -> GameBoard -> a
+foldl func acc { grid } =
+    Grid.foldl func acc grid
+
+
 isDraw : GameBoard -> Bool
 isDraw =
-    Grid.foldl (\gameBoardSpace all -> all && (not <| isEmptySpace gameBoardSpace)) True
+    foldl (\gameBoardSpace all -> all && (not <| isEmptySpace gameBoardSpace)) True
 
 
 isEmpty : Coordinate -> GameBoard -> Maybe Coordinate
-isEmpty coordinate gameBoard =
-    Grid.get coordinate gameBoard
+isEmpty coordinate { grid } =
+    Grid.get coordinate grid
         |> Maybe.Extra.filter isEmptySpace
         |> Maybe.map (always coordinate)
 
 
 hasMark : Mark -> Coordinate -> GameBoard -> Maybe Mark
-hasMark mark coordinate gameBoard =
-    Grid.get coordinate gameBoard
+hasMark mark coordinate { grid } =
+    Grid.get coordinate grid
         |> Maybe.Extra.filter (isMark mark)
         |> Maybe.map (always mark)
 
 
 set : Coordinate -> GameBoardSpace -> GameBoard -> GameBoard
-set coordinate gameBoardSpace =
-    Grid.set coordinate gameBoardSpace
+set coordinate gameBoardSpace gameBoard =
+    { gameBoard | grid = Grid.set coordinate gameBoardSpace gameBoard.grid }
+
+
+capture : Coordinate -> GameBoardSpace -> GameBoard -> GameBoard
+capture coordinate gameBoardSpace gameBoard =
+    let
+        captured =
+            if isEmpty coordinate gameBoard |> Maybe.Extra.isJust then
+                gameBoard.captured + 1
+
+            else
+                gameBoard.captured
+
+        setGameBoard =
+            set coordinate gameBoardSpace gameBoard
+    in
+    { setGameBoard | captured = captured }
