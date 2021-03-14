@@ -27,12 +27,12 @@ currentPlayer game =
 
 singlePlayer : Game
 singlePlayer =
-    Game ( Player.human XMark, Player.bot OMark ) (GameBoard.empty 3) False Nothing
+    Game ( Player.human XMark, Player.bot OMark ) GameBoard.empty False Nothing
 
 
 twoPlayer : Game
 twoPlayer =
-    Game ( Player.human XMark, Player.human OMark ) (GameBoard.empty 3) False Nothing
+    Game ( Player.human XMark, Player.human OMark ) GameBoard.empty False Nothing
 
 
 isFinished : Game -> Bool
@@ -43,7 +43,7 @@ isFinished game =
 randomChoiceGenerator : Game -> Generator Coordinate
 randomChoiceGenerator game =
     -- FIXME This could be smarter if I picked from known empty spaces
-    Random.pair (Random.int 0 (game.board.size - 1)) (Random.int 0 (game.board.size - 1))
+    Random.pair (Random.int 0 2) (Random.int 0 2)
 
 
 capture : Game -> Coordinate -> Game

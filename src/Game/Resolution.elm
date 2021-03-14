@@ -34,6 +34,6 @@ wonBy player gameBoard =
             Player.Mark.toGameBoardMark player.mark
 
         initialValue =
-            ( False, b (List.repeat (gameBoard.size * 2 + 2) 1) )
+            ( False, b (List.repeat 8 1) )
     in
     List.foldl (handleStep gameBoardMark gameBoard) initialValue steps |> Tuple.first
