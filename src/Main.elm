@@ -2,10 +2,12 @@ module Main exposing (main)
 
 import Browser
 import Coordinate exposing (Coordinate)
+import Css exposing (border2, borderCollapse, center, collapse, cursor, height, margin, pointer, px, solid, textAlign, width)
 import Game exposing (Game)
 import GameBoard exposing (GameBoard, GameBoardSpace, Mark(..))
-import Html exposing (Html, button, div, h1, table, td, text, tr)
-import Html.Events exposing (onClick)
+import Html.Styled exposing (Html, button, div, h1, table, td, text, toUnstyled, tr)
+import Html.Styled.Attributes exposing (css)
+import Html.Styled.Events exposing (onClick)
 import Maybe.Extra exposing (isJust)
 import Player exposing (..)
 import Player.Mark
@@ -138,6 +140,10 @@ update msg model =
 
 boardSpaceView : Player -> GameBoardSpace -> Html Msg
 boardSpaceView currentPlayer boardSpace =
+    let
+        styling =
+            css [ border2 (px 1) solid, height (px 25), width (px 25) ]
+    in
     case boardSpace.mark of
         Empty ->
             let
@@ -148,13 +154,13 @@ boardSpaceView currentPlayer boardSpace =
                     else
                         []
             in
-            td action [ text "." ]
+            td (styling :: action) [ text "" ]
 
         X ->
-            td [] [ text "X" ]
+            td [ styling ] [ text "X" ]
 
         O ->
-            td [] [ text "O" ]
+            td [ styling ] [ text "O" ]
 
 
 gameRowsView : Player -> GameBoard -> List (Html Msg)
@@ -210,7 +216,7 @@ stateView model =
                 tableHtml =
                     game.board
                         |> gameRowsView (Game.currentPlayer game)
-                        |> table []
+                        |> table [ css [ borderCollapse collapse, textAlign center, cursor pointer ] ]
 
                 mFinishedHtml =
                     [ finishedView game ]
@@ -222,7 +228,7 @@ stateView model =
 
 view : Model -> Html Msg
 view model =
-    div []
+    div [ css [ margin (px 20) ] ]
         [ h1 [] [ text "Tic Tac Toe" ]
         , stateView model
         ]
@@ -232,7 +238,7 @@ main : Program () Model Msg
 main =
     Browser.element
         { init = always ( initialModel, Cmd.none )
-        , view = view
+        , view = view >> toUnstyled
         , update = update
         , subscriptions = always Sub.none
         }
