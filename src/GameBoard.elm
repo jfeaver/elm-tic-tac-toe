@@ -2,7 +2,6 @@ module GameBoard exposing (GameBoard, GameBoardSpace, Mark(..), empty, hasMark, 
 
 import Array
 import Coordinate exposing (Coordinate)
-import Game.WinAlgorithmStep exposing (WinAlgorithmStep)
 import Grid exposing (Grid)
 import Maybe.Extra
 
@@ -22,7 +21,6 @@ type alias GameBoardSpace =
 type alias GameBoard =
     { grid : Grid GameBoardSpace
     , size : Int
-    , winCheckSteps : List WinAlgorithmStep
     }
 
 
@@ -41,11 +39,8 @@ empty size =
     let
         grid =
             Grid.initialize size size (\x y -> GameBoardSpace Empty ( x, y ))
-
-        winCheckSteps =
-            Game.WinAlgorithmStep.stepsFor size
     in
-    GameBoard grid size winCheckSteps
+    GameBoard grid size
 
 
 map : (List a -> a) -> (GameBoardSpace -> a) -> GameBoard -> List a

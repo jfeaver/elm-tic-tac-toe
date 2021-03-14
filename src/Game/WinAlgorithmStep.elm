@@ -1,4 +1,4 @@
-module Game.WinAlgorithmStep exposing (WinAlgorithmStep, stepsFor)
+module Game.WinAlgorithmStep exposing (WinAlgorithmStep, steps)
 
 import Binary exposing (Bits)
 import Coordinate exposing (Coordinate)
@@ -32,8 +32,3 @@ steps =
     , { coordinate = ( 2, 1 ), win = b [ 1, 0, 0, 0, 1 ], turnOff = b [ 1, 1, 1, 0, 1, 1, 1, 0 ] }
     , { coordinate = ( 1, 2 ), win = b [ 1, 0, 1, 0 ], turnOff = b [ 1, 1, 1, 1, 0, 1, 0, 1 ] }
     ]
-
-
-stepsFor : Int -> List WinAlgorithmStep
-stepsFor size =
-    steps

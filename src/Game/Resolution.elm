@@ -1,7 +1,7 @@
 module Game.Resolution exposing (wonBy)
 
 import Binary exposing (Bits)
-import Game.WinAlgorithmStep exposing (WinAlgorithmStep)
+import Game.WinAlgorithmStep exposing (WinAlgorithmStep, steps)
 import GameBoard exposing (GameBoard, Mark)
 import Maybe.Extra
 import Player exposing (Player)
@@ -36,4 +36,4 @@ wonBy player gameBoard =
         initialValue =
             ( False, b (List.repeat (gameBoard.size * 2 + 2) 1) )
     in
-    List.foldl (handleStep gameBoardMark gameBoard) initialValue gameBoard.winCheckSteps |> Tuple.first
+    List.foldl (handleStep gameBoardMark gameBoard) initialValue steps |> Tuple.first
