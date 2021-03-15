@@ -1,7 +1,7 @@
 module Game exposing (..)
 
 import Coordinate exposing (Coordinate)
-import Game.Resolution
+import Game.Resolution exposing (WinPath)
 import GameBoard exposing (GameBoard, GameBoardSpace)
 import Maybe.Extra exposing (isJust)
 import Player exposing (Player)
@@ -15,7 +15,7 @@ type alias Game =
     { players : ( Player, Player )
     , board : GameBoard
     , isDraw : Bool
-    , winner : Maybe Player
+    , winner : Maybe ( Player, List WinPath )
     }
 
 
@@ -62,11 +62,7 @@ capture game coordinate =
             GameBoard.capture coordinate (GameBoardSpace mark coordinate) game.board
 
         winner =
-            if Game.Resolution.wonBy player updatedBoard then
-                Just player
-
-            else
-                Nothing
+            Game.Resolution.wonBy player updatedBoard
     in
     { game
         | board = updatedBoard

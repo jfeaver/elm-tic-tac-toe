@@ -7,7 +7,6 @@ module GameBoard exposing
     , foldl
     , hasMark
     , isDraw
-    , isEmpty
     , isMark
     , map
     , nthEmptySpace
@@ -17,7 +16,7 @@ module GameBoard exposing
 import Array
 import Coordinate exposing (Coordinate)
 import Grid exposing (Grid)
-import Maybe.Extra
+import Maybe.Extra exposing (isJust)
 import Random exposing (Generator)
 
 
@@ -108,11 +107,11 @@ isDraw =
     foldl (\gameBoardSpace all -> all && (not <| isEmptySpace gameBoardSpace)) True
 
 
-isEmpty : Coordinate -> GameBoard -> Maybe Coordinate
+isEmpty : Coordinate -> GameBoard -> Bool
 isEmpty coordinate { grid } =
     Grid.get coordinate grid
         |> Maybe.Extra.filter isEmptySpace
-        |> Maybe.map (always coordinate)
+        |> isJust
 
 
 hasMark : Mark -> Coordinate -> GameBoard -> Maybe Mark
@@ -131,7 +130,7 @@ capture : Coordinate -> GameBoardSpace -> GameBoard -> GameBoard
 capture coordinate gameBoardSpace gameBoard =
     let
         captured =
-            if isEmpty coordinate gameBoard |> Maybe.Extra.isJust then
+            if isEmpty coordinate gameBoard then
                 gameBoard.captured + 1
 
             else

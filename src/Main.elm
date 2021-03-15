@@ -2,8 +2,9 @@ module Main exposing (main)
 
 import Browser
 import Coordinate exposing (Coordinate)
-import Css exposing (border2, borderCollapse, center, collapse, cursor, height, margin, pointer, px, solid, textAlign, width)
+import Css exposing (..)
 import Game exposing (Game, currentPlayer)
+import Game.Resolution exposing (WinPath(..))
 import GameBoard exposing (GameBoard, GameBoardSpace, Mark(..))
 import Html.Styled exposing (Html, button, div, h1, table, td, text, toUnstyled, tr)
 import Html.Styled.Attributes exposing (css)
@@ -151,11 +152,24 @@ update msg model =
                     ( model, coordinate |> Capture |> GameMsg |> delay 0.8 )
 
 
+boardSpaceDim =
+    50
+
+
+boardSpaceBorder =
+    1
+
+
 boardSpaceView : Player -> GameBoardSpace -> Html Msg
 boardSpaceView currentPlayer boardSpace =
     let
         styling =
-            css [ border2 (px 1) solid, height (px 25), width (px 25) ]
+            css
+                [ border2 (px boardSpaceBorder) solid
+                , height (px boardSpaceDim)
+                , width (px boardSpaceDim)
+                , padding (px 0)
+                ]
     in
     case boardSpace.mark of
         Empty ->
@@ -181,6 +195,7 @@ gameRowsView currentPlayer =
     GameBoard.map (tr []) (boardSpaceView currentPlayer)
 
 
+winnerMessage : Player -> String
 winnerMessage player =
     let
         basicMessage =
@@ -193,18 +208,112 @@ winnerMessage player =
         basicMessage
 
 
+winPathStyles : WinPath -> List Style
+winPathStyles winPath =
+    let
+        crossPadding =
+            boardSpaceDim / 10
+
+        crossWidth =
+            3
+
+        crossDim =
+            3 * boardSpaceDim + 2 * boardSpaceBorder - 2 * crossPadding
+
+        diagCrossDim =
+            sqrt (2 * (crossDim - crossWidth) * (crossDim - crossWidth))
+
+        crossOpacity =
+            0.25
+
+        topPos n =
+            (n - 1) * boardSpaceDim + n * boardSpaceBorder + boardSpaceDim / 2 - crossWidth / 3 - 1
+
+        leftPos =
+            topPos
+
+        cStyles n =
+            [ height (px crossDim)
+            , borderLeft2 (px crossWidth) solid
+            , position absolute
+            , top (px (boardSpaceBorder + crossPadding))
+            , left (px (leftPos n))
+            , opacity (num crossOpacity)
+            ]
+
+        rStyles n =
+            [ width (px crossDim)
+            , borderTop2 (px crossWidth) solid
+            , position absolute
+            , top (px (topPos n))
+            , left (px (boardSpaceBorder + crossPadding))
+            , opacity (num crossOpacity)
+            ]
+
+        diagStyles rot =
+            [ transform (rotate (deg rot))
+            , height (px diagCrossDim)
+            , borderLeft2 (px crossWidth) solid
+            , position absolute
+            , top (px (topPos 2 - (diagCrossDim / 2) + (2 * boardSpaceBorder)))
+            , left (px (leftPos 2))
+            , opacity (num crossOpacity)
+            ]
+    in
+    case winPath of
+        D1 ->
+            diagStyles -45
+
+        D2 ->
+            diagStyles 45
+
+        R1 ->
+            rStyles 1
+
+        R2 ->
+            rStyles 2
+
+        R3 ->
+            rStyles 3
+
+        C1 ->
+            cStyles 1
+
+        C2 ->
+            cStyles 2
+
+        C3 ->
+            cStyles 3
+
+
+finishedView : Game -> Html Msg
 finishedView game =
     let
         message =
             if isJust game.winner then
                 game.winner
-                    |> Maybe.map winnerMessage
+                    |> Maybe.map (Tuple.first >> winnerMessage)
                     |> Maybe.withDefault "You're finished!"
 
             else
                 "It's a draw!"
+
+        winPathEls =
+            case game.winner of
+                Just ( _, winPaths ) ->
+                    List.map (\winPath -> div [ css (winPathStyles winPath) ] []) winPaths
+
+                Nothing ->
+                    []
     in
-    div [] [ text message, div [] [ button [ onClick <| Again game.players ] [ text "Play Again" ], button [ onClick Escape ] [ text "Menu" ] ] ]
+    div []
+        [ text message
+        , div []
+            [ button [ onClick <| Again game.players ] [ text "Play Again" ]
+            , button [ onClick Escape ] [ text "Menu" ]
+            ]
+        , div [] winPathEls
+        ]
 
 
 stateView : Model -> Html Msg
@@ -221,22 +330,29 @@ stateView model =
                 currentPlayer =
                     Game.currentPlayer game
 
+                gameIsFinished =
+                    Game.isFinished game
+
                 mTurnHtml =
-                    [ div [] [ text <| Player.Mark.toString currentPlayer.mark ++ "'s Turn" ] ]
-                        |> Just
-                        |> Maybe.Extra.filter ((not <| Game.isFinished game) |> always)
+                    if not gameIsFinished then
+                        Just [ div [] [ text <| Player.Mark.toString currentPlayer.mark ++ "'s Turn" ] ]
+
+                    else
+                        Nothing
 
                 tableHtml =
                     game.board
                         |> gameRowsView (Game.currentPlayer game)
-                        |> table [ css [ borderCollapse collapse, textAlign center, cursor pointer ] ]
+                        |> Html.Styled.table [ css [ borderCollapse collapse, textAlign center, cursor pointer ] ]
 
                 mFinishedHtml =
-                    [ finishedView game ]
-                        |> Just
-                        |> Maybe.Extra.filter (Game.isFinished game |> always)
+                    if gameIsFinished then
+                        Just [ finishedView game ]
+
+                    else
+                        Nothing
             in
-            div [] (List.concat [ [ tableHtml ], Maybe.withDefault [] mTurnHtml, Maybe.withDefault [] mFinishedHtml ])
+            div [ css [ position relative ] ] (List.concat [ [ tableHtml ], Maybe.withDefault [] mTurnHtml, Maybe.withDefault [] mFinishedHtml ])
 
 
 view : Model -> Html Msg
