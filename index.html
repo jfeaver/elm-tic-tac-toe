@@ -8856,25 +8856,47 @@ var $author$project$Main$finishedView = function (game) {
 				A2($rtfeldman$elm_css$Html$Styled$div, _List_Nil, winPathEls)
 			]));
 };
-var $rtfeldman$elm_css$Css$border2 = $rtfeldman$elm_css$Css$prop2('border');
+var $author$project$Main$boardSpaceBorderStyle = function (_v0) {
+	var coordinate = _v0.u;
+	var conditionalStyles = _List_fromArray(
+		[
+			_Utils_Tuple2(
+			!(!coordinate.a),
+			A2(
+				$rtfeldman$elm_css$Css$borderLeft2,
+				$rtfeldman$elm_css$Css$px($author$project$Main$boardSpaceBorder),
+				$rtfeldman$elm_css$Css$solid)),
+			_Utils_Tuple2(
+			!(!coordinate.b),
+			A2(
+				$rtfeldman$elm_css$Css$borderTop2,
+				$rtfeldman$elm_css$Css$px($author$project$Main$boardSpaceBorder),
+				$rtfeldman$elm_css$Css$solid))
+		]);
+	return A2(
+		$elm$core$List$map,
+		$elm$core$Tuple$second,
+		A2($elm$core$List$filter, $elm$core$Tuple$first, conditionalStyles));
+};
 var $rtfeldman$elm_css$Css$padding = $rtfeldman$elm_css$Css$prop1('padding');
 var $rtfeldman$elm_css$Html$Styled$td = $rtfeldman$elm_css$Html$Styled$node('td');
 var $author$project$Main$boardSpaceView = F2(
 	function (currentPlayer, boardSpace) {
 		var styling = $rtfeldman$elm_css$Html$Styled$Attributes$css(
-			_List_fromArray(
-				[
-					A2(
-					$rtfeldman$elm_css$Css$border2,
-					$rtfeldman$elm_css$Css$px($author$project$Main$boardSpaceBorder),
-					$rtfeldman$elm_css$Css$solid),
-					$rtfeldman$elm_css$Css$height(
-					$rtfeldman$elm_css$Css$px($author$project$Main$boardSpaceDim)),
-					$rtfeldman$elm_css$Css$width(
-					$rtfeldman$elm_css$Css$px($author$project$Main$boardSpaceDim)),
-					$rtfeldman$elm_css$Css$padding(
-					$rtfeldman$elm_css$Css$px(0))
-				]));
+			$elm$core$List$concat(
+				_List_fromArray(
+					[
+						_List_fromArray(
+						[
+							$rtfeldman$elm_css$Css$height(
+							$rtfeldman$elm_css$Css$px($author$project$Main$boardSpaceDim)),
+							$rtfeldman$elm_css$Css$width(
+							$rtfeldman$elm_css$Css$px($author$project$Main$boardSpaceDim)),
+							$rtfeldman$elm_css$Css$padding(
+							$rtfeldman$elm_css$Css$px(0))
+						]),
+						$author$project$Main$boardSpaceBorderStyle(boardSpace)
+					])));
 		var _v0 = boardSpace.cn;
 		switch (_v0) {
 			case 0:

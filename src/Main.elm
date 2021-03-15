@@ -6,7 +6,7 @@ import Css exposing (..)
 import Game exposing (Game, currentPlayer)
 import Game.Resolution exposing (WinPath(..))
 import GameBoard exposing (GameBoard, GameBoardSpace, Mark(..))
-import Html.Styled exposing (Html, button, div, h1, table, td, text, toUnstyled, tr)
+import Html.Styled exposing (Html, button, div, h1, td, text, toUnstyled, tr)
 import Html.Styled.Attributes exposing (css)
 import Html.Styled.Events exposing (onClick)
 import Maybe.Extra exposing (isJust)
@@ -160,16 +160,32 @@ boardSpaceBorder =
     1
 
 
+boardSpaceBorderStyle : GameBoardSpace -> List Style
+boardSpaceBorderStyle { coordinate } =
+    let
+        conditionalStyles =
+            [ ( Tuple.first coordinate /= 0, borderLeft2 (px boardSpaceBorder) solid )
+            , ( Tuple.second coordinate /= 0, borderTop2 (px boardSpaceBorder) solid )
+            ]
+    in
+    conditionalStyles
+        |> List.filter Tuple.first
+        |> List.map Tuple.second
+
+
 boardSpaceView : Player -> GameBoardSpace -> Html Msg
 boardSpaceView currentPlayer boardSpace =
     let
         styling =
             css
-                [ border2 (px boardSpaceBorder) solid
-                , height (px boardSpaceDim)
-                , width (px boardSpaceDim)
-                , padding (px 0)
-                ]
+                (List.concat
+                    [ [ height (px boardSpaceDim)
+                      , width (px boardSpaceDim)
+                      , padding (px 0)
+                      ]
+                    , boardSpaceBorderStyle boardSpace
+                    ]
+                )
     in
     case boardSpace.mark of
         Empty ->
