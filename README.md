@@ -1,6 +1,8 @@
 # Elm Tic-Tac-Toe
 A Tic-Tac-Toe game for a single player (with a random choice opponent) or two players at the same computer.
 
+[Play Now](https://jfeaver.github.io/elm-tic-tac-toe/)
+
 # Why??
 I got into it and was having a lot of fun figuring out the algorithm for determining if the player had won or not.
 I also really enjoyed feeling more fluent with Elm/FP things like: code/module organization, function composition, data
